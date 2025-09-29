@@ -302,28 +302,27 @@ The application uses local storage for client-side data persistence and includes
 
 
 Project Structure
-
 my-notes-app/
-\u251c\u2500\u2500 middleware/
-\u2502   \u2514\u2500\u2500 auth.js           # JWT authentication middleware
-\u251c\u2500\u2500 models/
-\u2502   \u251c\u2500\u2500 Note.js           # Note model schema
-\u2502   \u2514\u2500\u2500 user.js           # User model schema
-\u251c\u2500\u2500 public/
-\u2502   \u251c\u2500\u2500 background.jpg    # Background image
-\u2502   \u251c\u2500\u2500 FRF721KI.TTF      # Custom font
-\u2502   \u251c\u2500\u2500 index.html        # Registration page
-\u2502   \u251c\u2500\u2500 login.html        # Login page
-\u2502   \u251c\u2500\u2500 notes.html        # Main notes interface
-\u2502   \u251c\u2500\u2500 style.css         # Styles for all pages
-\u2502   \u2514\u2500\u2500 tutorial.mp4      # Tutorial video
-\u251c\u2500\u2500 routes/
-\u2502   \u251c\u2500\u2500 auth.js           # Authentication routes
-\u2502   \u2514\u2500\u2500 notes.js          # Notes CRUD routes
-\u251c\u2500\u2500 .env                  # Environment variables
-\u251c\u2500\u2500 package.json          # Project dependencies
-\u251c\u2500\u2500 package-lock.json     # Dependency lock file
-\u2514\u2500\u2500 server.js             # Main application entry point
+├── middleware/
+│   └── auth.js        # JWT authentication middleware
+├── models/
+│   ├── Note.js        # Note model schema
+│   └── user.js        # User model schema
+├── public/
+│   ├── background.jpg # Background image
+│   ├── FRF721KI.TTF   # Custom font
+│   ├── index.html     # Registration page
+│   ├── login.html     # Login page
+│   ├── notes.html     # Main notes interface
+│   ├── style.css      # Styles for all pages
+│   └── tutorial.mp4   # Tutorial video
+├── routes/
+│   ├── auth.js        # Authentication routes
+│   └── notes.js       # Notes CRUD routes
+├── .env               # Environment variables
+├── package.json       # Project dependencies
+├── package-lock.json  # Dependency lock file
+└── server.js          # Main application entry point
 
 
 Security

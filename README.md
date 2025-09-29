@@ -64,8 +64,8 @@ Prerequisites
 Installation
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/my-notes-app.git
-cd my-notes-app
+git clone https://github.com/frankwilz/mynotesapp.git
+cd mynotesapp
 ```
 
 2. Install dependencies:

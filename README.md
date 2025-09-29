@@ -301,7 +301,9 @@ The application uses local storage for client-side data persistence and includes
 • First-time user tutorial
 
 
-Project Structure
+## Project Structure
+
+```text
 my-notes-app/
 ├── middleware/
 │   └── auth.js        # JWT authentication middleware

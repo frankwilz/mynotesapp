@@ -63,6 +63,9 @@ exports.handler = async (event, context) => {
     if (error.message.startsWith('Missing required environment variables:')) {
       return getErrorResponse(error.message, 500);
     }
+    if (error.message.startsWith('MONGO_URI must be a public MongoDB URI')) {
+      return getErrorResponse(error.message, 500);
+    }
     return getErrorResponse('Server error', 500);
   }
 };

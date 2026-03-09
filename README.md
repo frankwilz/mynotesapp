@@ -13,6 +13,7 @@ Table of Contents
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
 - [Environment Variables](#environment-variables)
+- [Deployment (Render)](#deployment-render)
 • [API Documentation](#api-documentation)
 - [Authentication Endpoints](#authentication-endpoints)
 - [Notes Endpoints](#notes-endpoints)
@@ -104,6 +105,31 @@ PORT=4000
 
 
 For production, make sure to use a strong, unique JWT secret and a secure MongoDB connection.
+
+
+Deployment (Render)
+
+This repo includes `render.yaml` for one-click deployment from GitHub.
+
+1. Push the latest code to GitHub:
+```bash
+git add .
+git commit -m "Prepare app for production deploy"
+git push origin main
+```
+
+2. Create a MongoDB Atlas database and copy the connection string.
+
+3. In Render, create a new Blueprint service from this repository.
+
+4. In Render environment variables, set:
+- `MONGO_URI` = your MongoDB Atlas URI
+- `JWT_SECRET` = a long random secret
+- `NODE_ENV` is already set to `production` by `render.yaml`
+
+5. Deploy and open:
+- `https://<your-service>.onrender.com/api/health` (should return `{ "ok": true }`)
+- `https://<your-service>.onrender.com`
 
 
 API Documentation

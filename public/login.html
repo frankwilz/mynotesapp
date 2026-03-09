@@ -9,28 +9,66 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div id="login-form">
+<form id="login-form">
   <h2>Login</h2>
-  <input type="text" id="login-username" placeholder="Username">
-  <input type="password" id="login-password" placeholder="Password">
-  <button id="login-btn">Login</button>
+  <input type="text" id="login-username" placeholder="Username" autocomplete="username">
+  <input type="password" id="login-password" placeholder="Password" autocomplete="current-password">
+  <button id="login-btn" type="submit">Login</button>
+  <p id="login-error" class="auth-error"></p>
   <p>Don't have an account? <a href="index.html">Register</a></p>
-</div>
+</form>
 
 <script>
+const API_BASE = '/api';
+const AUTH_TOKEN_KEY = 'notes_token';
+const AUTH_USER_KEY = 'notes_user';
+const loginForm = document.getElementById('login-form');
 const loginBtn = document.getElementById('login-btn');
-loginBtn.addEventListener('click', () => {
+const errorEl = document.getElementById('login-error');
+
+if (localStorage.getItem(AUTH_TOKEN_KEY)) {
+  window.location.href = 'notes.html';
+}
+
+function setError(message = '') {
+  errorEl.textContent = message;
+}
+
+function setBusy(isBusy) {
+  loginBtn.disabled = isBusy;
+  loginBtn.textContent = isBusy ? 'Logging in...' : 'Login';
+}
+
+loginForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
   const username = document.getElementById('login-username').value.trim();
   const password = document.getElementById('login-password').value.trim();
-  if(!username || !password) return alert('Fill in both fields!');
 
-  const users = JSON.parse(localStorage.getItem('users')) || [];
-  const savedUser = users.find(u => u.username === username && u.password === password);
-  if(savedUser) {
-    localStorage.setItem('user', JSON.stringify(savedUser));
+  if(!username || !password) {
+    setError('Fill in both fields.');
+    return;
+  }
+
+  setError('');
+  setBusy(true);
+
+  try {
+    const response = await fetch(`${API_BASE}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+    const payload = await response.json();
+    if (!response.ok) {
+      throw new Error(payload.msg || 'Login failed.');
+    }
+    localStorage.setItem(AUTH_TOKEN_KEY, payload.token);
+    localStorage.setItem(AUTH_USER_KEY, JSON.stringify(payload.user));
     window.location.href = 'notes.html';
-  } else {
-    alert('Incorrect username or password!');
+  } catch (error) {
+    setError(error.message || 'Login failed.');
+  } finally {
+    setBusy(false);
   }
 });
 </script>

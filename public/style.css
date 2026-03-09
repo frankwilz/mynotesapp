@@ -19,6 +19,7 @@ h1, h2, h3 {
 
 h1 {
     color: white; /* Always white */
+    text-align: center;
 }
 
 .dark-mode {
@@ -101,12 +102,12 @@ button:hover {
 }
 
 /* Toggle dark mode button (subtle gray) */
-#toggle-dark-mode {
+#dark-mode-btn {
     background: rgba(200, 200, 200, 0.3);
     color: #fff;
 }
 
-#toggle-dark-mode:hover {
+#dark-mode-btn:hover {
     background: rgba(200, 200, 200, 0.5);
     box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
 }
@@ -135,4 +136,41 @@ button:hover {
 .dark-mode .note {
     background-color: rgba(51,51,51,0.9);
     color: #eee;
+}
+
+#logout-btn {
+    float: right;
+    margin: 10px 0 0;
+}
+
+.auth-error {
+    color: #b00020;
+    min-height: 24px;
+    margin: 4px 0 10px;
+}
+
+.status {
+    min-height: 24px;
+    margin: 0 auto 10px;
+    max-width: 600px;
+    text-align: center;
+    font-size: 18px;
+}
+
+.status.error {
+    color: #b00020;
+}
+
+.status.success {
+    color: #2e7d32;
+}
+
+.empty-notes {
+    text-align: center;
+    color: #fff;
+}
+
+button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
 }

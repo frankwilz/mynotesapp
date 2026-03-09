@@ -50,7 +50,8 @@ Frontend
 • HTML5
 • CSS3
 • Vanilla JavaScript
-• Local Storage for client-side data persistence
+• Fetch API for backend communication
+• Local Storage for JWT session persistence
 
 
 Getting Started
@@ -295,7 +296,7 @@ The frontend consists of three main pages:
 3. **Notes Page (notes.html)**: Main application interface for managing notes
 
 
-The application uses local storage for client-side data persistence and includes features like:
+The frontend calls the backend API for authentication and notes CRUD, and uses local storage only for session state (JWT + dark mode). It also includes:
 • Dark mode toggle
 • Note search functionality
 • First-time user tutorial

@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>My Notes</title>
 <link rel="stylesheet" href="style.css">
-</head>
 <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&display=swap" rel="stylesheet">
-
+</head>
 <body>
 <h1>My Notes</h1>
-<button id="logout-btn" style="float:right;">Logout</button>
+<button id="logout-btn">Logout</button>
+<p id="status" class="status" aria-live="polite"></p>
 <input type="text" id="search" placeholder="Search notes...">
 <div id="note-form">
   <input type="text" id="note-title" placeholder="Note Title">
@@ -21,11 +21,26 @@
 <div id="notes-container"></div>
 
 <script>
-const user = JSON.parse(localStorage.getItem('user'));
-if(!user) window.location.href = 'login.html';
+const API_BASE = '/api';
+const AUTH_TOKEN_KEY = 'notes_token';
+const AUTH_USER_KEY = 'notes_user';
+const token = localStorage.getItem(AUTH_TOKEN_KEY);
+const storedUser = localStorage.getItem(AUTH_USER_KEY);
+let user = null;
+if (storedUser) {
+  try {
+    user = JSON.parse(storedUser);
+  } catch {
+    localStorage.removeItem(AUTH_USER_KEY);
+  }
+}
 
-let notes = JSON.parse(localStorage.getItem(`notes_${user.username}`)) || [];
-let editIndex = null;
+if (!token) {
+  window.location.href = 'login.html';
+}
+
+let notes = [];
+let editId = null;
 
 const titleInput = document.getElementById('note-title');
 const contentInput = document.getElementById('note-content');
@@ -34,9 +49,27 @@ const notesContainer = document.getElementById('notes-container');
 const searchInput = document.getElementById('search');
 const darkBtn = document.getElementById('dark-mode-btn');
 const logoutBtn = document.getElementById('logout-btn');
+const statusEl = document.getElementById('status');
+
+function setStatus(message = '', type = '') {
+  statusEl.textContent = message;
+  statusEl.className = type ? `status ${type}` : 'status';
+}
+
+function clearAuthAndRedirect() {
+  localStorage.removeItem(AUTH_TOKEN_KEY);
+  localStorage.removeItem(AUTH_USER_KEY);
+  window.location.href = 'login.html';
+}
+
+function getHeaders(includeJson = false) {
+  const headers = { Authorization: `Bearer ${token}` };
+  if (includeJson) headers['Content-Type'] = 'application/json';
+  return headers;
+}
 
 // Dark mode persistence
-const darkModeKey = `darkMode_${user.username}`;
+const darkModeKey = `darkMode_${user ? user.id : 'guest'}`;
 if (localStorage.getItem(darkModeKey) === 'true') {
   document.body.classList.add('dark-mode');
 }
@@ -48,52 +81,134 @@ darkBtn.addEventListener('click', () => {
 
 function renderNotes(list = notes) {
   notesContainer.innerHTML = '';
-  list.forEach((note, index) => {
+  if (!list.length) {
+    const empty = document.createElement('p');
+    empty.className = 'empty-notes';
+    empty.textContent = 'No notes yet. Create your first note.';
+    notesContainer.appendChild(empty);
+    return;
+  }
+
+  list.forEach((note) => {
     const noteDiv = document.createElement('div');
     noteDiv.className = 'note';
-    noteDiv.innerHTML = `
-      <h3>${note.title}</h3>
-      <small>${note.date}</small>
-      <p>${note.content}</p>
-      <button onclick="editNote(${index})">Edit</button>
-      <button class="delete" onclick="deleteNote(${index})">Delete</button>
-    `;
+
+    const heading = document.createElement('h3');
+    heading.textContent = note.title;
+    const timestamp = document.createElement('small');
+    timestamp.textContent = new Date(note.updatedAt || note.createdAt).toLocaleString();
+    const paragraph = document.createElement('p');
+    paragraph.textContent = note.content || '';
+    const editButton = document.createElement('button');
+    editButton.textContent = 'Edit';
+    editButton.addEventListener('click', () => editNote(note._id));
+    const deleteButton = document.createElement('button');
+    deleteButton.className = 'delete';
+    deleteButton.textContent = 'Delete';
+    deleteButton.addEventListener('click', () => deleteNote(note._id));
+
+    noteDiv.appendChild(heading);
+    noteDiv.appendChild(timestamp);
+    noteDiv.appendChild(paragraph);
+    noteDiv.appendChild(editButton);
+    noteDiv.appendChild(deleteButton);
     notesContainer.appendChild(noteDiv);
   });
 }
 
-function saveNote() {
+async function loadNotes() {
+  setStatus('Loading notes...');
+  try {
+    const response = await fetch(`${API_BASE}/notes`, { headers: getHeaders() });
+    const payload = await response.json();
+    if (!response.ok) {
+      if (response.status === 401) {
+        clearAuthAndRedirect();
+        return;
+      }
+      throw new Error(payload.msg || 'Failed to fetch notes.');
+    }
+    notes = payload;
+    renderNotes(notes);
+    setStatus('');
+  } catch (error) {
+    setStatus(error.message || 'Failed to load notes.', 'error');
+  }
+}
+
+async function saveNote() {
   const title = titleInput.value.trim();
   const content = contentInput.value.trim();
-  if(!title || !content) return alert('Please fill in both fields!');
-  
-  const date = new Date().toLocaleString();
-  if(editIndex !== null) {
-    notes[editIndex] = { title, content, date };
-    editIndex = null;
-    saveBtn.textContent = 'Save Note';
-  } else {
-    notes.push({ title, content, date });
+  if (!title) {
+    setStatus('Please enter a title.', 'error');
+    return;
   }
 
-  localStorage.setItem(`notes_${user.username}`, JSON.stringify(notes));
-  titleInput.value = '';
-  contentInput.value = '';
-  renderNotes();
+  const method = editId ? 'PUT' : 'POST';
+  const path = editId ? `${API_BASE}/notes/${editId}` : `${API_BASE}/notes`;
+  saveBtn.disabled = true;
+  saveBtn.textContent = method === 'PUT' ? 'Updating...' : 'Saving...';
+  setStatus('');
+
+  try {
+    const response = await fetch(path, {
+      method,
+      headers: getHeaders(true),
+      body: JSON.stringify({ title, content }),
+    });
+    const payload = await response.json();
+    if (!response.ok) {
+      if (response.status === 401) {
+        clearAuthAndRedirect();
+        return;
+      }
+      throw new Error(payload.msg || 'Failed to save note.');
+    }
+
+    titleInput.value = '';
+    contentInput.value = '';
+    editId = null;
+    saveBtn.textContent = 'Save Note';
+    await loadNotes();
+    setStatus('Note saved.', 'success');
+  } catch (error) {
+    setStatus(error.message || 'Failed to save note.', 'error');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = editId ? 'Update Note' : 'Save Note';
+  }
 }
 
-function editNote(index) {
-  editIndex = index;
-  titleInput.value = notes[index].title;
-  contentInput.value = notes[index].content;
+function editNote(noteId) {
+  const note = notes.find((item) => item._id === noteId);
+  if (!note) return;
+  editId = noteId;
+  titleInput.value = note.title;
+  contentInput.value = note.content;
   saveBtn.textContent = 'Update Note';
+  setStatus('Editing note.', 'success');
 }
 
-function deleteNote(index) {
+async function deleteNote(noteId) {
   if(confirm("Are you sure you want to delete this note?")) {
-    notes.splice(index, 1);
-    localStorage.setItem(`notes_${user.username}`, JSON.stringify(notes));
-    renderNotes();
+    try {
+      const response = await fetch(`${API_BASE}/notes/${noteId}`, {
+        method: 'DELETE',
+        headers: getHeaders(),
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        if (response.status === 401) {
+          clearAuthAndRedirect();
+          return;
+        }
+        throw new Error(payload.msg || 'Failed to delete note.');
+      }
+      await loadNotes();
+      setStatus('Note deleted.', 'success');
+    } catch (error) {
+      setStatus(error.message || 'Failed to delete note.', 'error');
+    }
   }
 }
 
@@ -102,18 +217,20 @@ saveBtn.addEventListener('click', saveNote);
 // Search notes
 searchInput.addEventListener('input', () => {
   const query = searchInput.value.toLowerCase();
-  const filtered = notes.filter(n => n.title.toLowerCase().includes(query) || n.content.toLowerCase().includes(query));
+  const filtered = notes.filter((note) =>
+    note.title.toLowerCase().includes(query) ||
+    (note.content || '').toLowerCase().includes(query)
+  );
   renderNotes(filtered);
 });
 
 // Logout
 logoutBtn.addEventListener('click', () => {
-  localStorage.removeItem('user');
-  window.location.href = 'login.html';
+  clearAuthAndRedirect();
 });
 
 // Initial
-renderNotes();
+if (token) loadNotes();
 </script>
 </body>
 </html>

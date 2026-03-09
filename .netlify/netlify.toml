@@ -1,0 +1,40 @@
+functionsDirectory = "/Users/frankwilliams/Documents/mynotesapp/netlify/functions"
+functionsDirectoryOrigin = "config-v1"
+redirectsOrigin = "config"
+plugins = []
+headers = []
+
+[build]
+publish = "/Users/frankwilliams/Documents/mynotesapp/public"
+publishOrigin = "config"
+functions = "/Users/frankwilliams/Documents/mynotesapp/netlify/functions"
+
+[build.environment]
+
+[build.processing]
+
+[build.processing.css]
+
+[build.processing.html]
+
+[build.processing.images]
+
+[build.processing.js]
+
+[build.services]
+
+[functions]
+
+[functions."*"]
+
+[[redirects]]
+from = "/api/*"
+to = "/.netlify/functions/api/api/:splat"
+status = 200.0
+force = true
+
+[redirects.query]
+
+[redirects.conditions]
+
+[redirects.headers]

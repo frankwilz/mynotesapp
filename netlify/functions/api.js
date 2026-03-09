@@ -24,7 +24,9 @@ async function connectDatabase() {
   if (mongoose.connection.readyState === 1) return;
 
   if (!dbConnectionPromise) {
-    dbConnectionPromise = mongoose.connect(process.env.MONGO_URI)
+    dbConnectionPromise = mongoose.connect(process.env.MONGO_URI, {
+      serverSelectionTimeoutMS: 7000,
+    })
       .catch((error) => {
         dbConnectionPromise = null;
         throw error;
@@ -40,6 +42,10 @@ async function getHandler() {
   const missingEnvVars = getMissingEnvVars();
   if (missingEnvVars.length) {
     throw new Error(`Missing required environment variables: ${missingEnvVars.join(', ')}`);
+  }
+
+  if (/localhost|127\.0\.0\.1/.test(process.env.MONGO_URI)) {
+    throw new Error('MONGO_URI must be a public MongoDB URI (for example MongoDB Atlas) when deployed to Netlify');
   }
 
   await connectDatabase();

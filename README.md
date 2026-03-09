@@ -13,7 +13,7 @@ Table of Contents
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
 - [Environment Variables](#environment-variables)
-- [Deployment (Render)](#deployment-render)
+- [Deployment (Netlify)](#deployment-netlify)
 • [API Documentation](#api-documentation)
 - [Authentication Endpoints](#authentication-endpoints)
 - [Notes Endpoints](#notes-endpoints)
@@ -107,9 +107,9 @@ PORT=4000
 For production, make sure to use a strong, unique JWT secret and a secure MongoDB connection.
 
 
-Deployment (Render)
+Deployment (Netlify)
 
-This repo includes `render.yaml` for one-click deployment from GitHub.
+This repo includes `netlify.toml` and a Netlify Function (`netlify/functions/api.js`) for permanent hosting on Netlify.
 
 1. Push the latest code to GitHub:
 ```bash
@@ -120,16 +120,16 @@ git push origin main
 
 2. Create a MongoDB Atlas database and copy the connection string.
 
-3. In Render, create a new Blueprint service from this repository.
+3. In Netlify, import the GitHub repository and deploy.
 
-4. In Render environment variables, set:
+4. In Netlify site environment variables, set:
 - `MONGO_URI` = your MongoDB Atlas URI
 - `JWT_SECRET` = a long random secret
-- `NODE_ENV` is already set to `production` by `render.yaml`
+- Optional: `NODE_ENV=production`
 
 5. Deploy and open:
-- `https://<your-service>.onrender.com/api/health` (should return `{ "ok": true }`)
-- `https://<your-service>.onrender.com`
+- `https://<your-netlify-site>.netlify.app/api/health` (should return `{ "ok": true }`)
+- `https://<your-netlify-site>.netlify.app`
 
 
 API Documentation
@@ -332,6 +332,9 @@ The frontend calls the backend API for authentication and notes CRUD, and uses l
 
 ```text
 my-notes-app/
+├── netlify/
+│   └── functions/
+│       └── api.js      # Netlify serverless API wrapper
 ├── middleware/
 │   └── auth.js        # JWT authentication middleware
 ├── models/
@@ -348,7 +351,9 @@ my-notes-app/
 ├── routes/
 │   ├── auth.js        # Authentication routes
 │   └── notes.js       # Notes CRUD routes
-├── .env               # Environment variables
+├── app.js             # Shared Express app bootstrap
+├── netlify.toml       # Netlify build + API routing config
+├── .env.example       # Environment template
 ├── package.json       # Project dependencies
 ├── package-lock.json  # Dependency lock file
 └── server.js          # Main application entry point
